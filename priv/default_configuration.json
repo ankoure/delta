@@ -1,17 +1,68 @@
 {
   "sinks": {
-    "log": {
-      "type": "log",
-      "producers": ["vehicle_positions", "trip_updates"]
+    "s3": {
+      "type": "s3",
+      "bucket": {"system": "S3_BUCKET"},
+      "prefix": "mta",
+      "producers": [
+        "subway_1234567", "subway_ace", "subway_bdfm", "subway_g",
+        "subway_jz", "subway_l", "subway_nqrw", "subway_si", "subway_alerts",
+        "bus_nyct", "bus_nyct_alerts", "bus_mta", "bus_mta_alerts",
+        "lirr", "lirr_alerts", "metro_north", "metro_north_alerts"
+      ]
     }
   },
   "producers": {
-    "vehicle_positions": {
-      "url": "https://cdn.mbta.com/realtime/VehiclePositions.pb",
-      "frequency": 1000
+    "subway_1234567": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
     },
-    "trip_updates": {
-      "url": "https://cdn.mbta.com/realtime/TripUpdates.pb"
+    "subway_ace": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
+    },
+    "subway_bdfm": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm"
+    },
+    "subway_g": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g"
+    },
+    "subway_jz": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz"
+    },
+    "subway_l": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l"
+    },
+    "subway_nqrw": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw"
+    },
+    "subway_si": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si"
+    },
+    "subway_alerts": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts"
+    },
+    "bus_nyct": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nyct-bus"
+    },
+    "bus_nyct_alerts": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fbus-alerts"
+    },
+    "bus_mta": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-mta-bus"
+    },
+    "bus_mta_alerts": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fmta-bus-alerts"
+    },
+    "lirr": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr"
+    },
+    "lirr_alerts": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Flirr-alerts"
+    },
+    "metro_north": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/mnr%2Fgtfs-mnr"
+    },
+    "metro_north_alerts": {
+      "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fmnr-alerts"
     }
   }
 }

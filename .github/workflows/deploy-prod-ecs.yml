@@ -2,8 +2,9 @@ name: Deploy to ECS Prod
 
 permissions:
   id-token: write
+  contents: read
 
-on:  workflow_dispatch
+on: workflow_dispatch
 
 jobs:
   deploy:
@@ -16,21 +17,43 @@ jobs:
       ECS_SERVICE: delta-prod
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: mbta/actions/build-push-ecr@v2
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - name: Build, tag, and push Docker image
         id: build-push
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.DOCKER_REPO }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:prod .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:prod
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_SERVICE }} \
+            --query taskDefinition > task-definition.json
+
+      - uses: aws-actions/amazon-ecs-render-task-definition@v1
+        id: render
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          docker-repo: ${{ secrets.DOCKER_REPO }}
-          docker-additional-tags: prod
-      - uses: mbta/actions/deploy-ecs@v2
+          task-definition: task-definition.json
+          container-name: ${{ env.ECS_SERVICE }}
+          image: ${{ steps.build-push.outputs.image }}
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          ecs-cluster: ${{ env.ECS_CLUSTER }}
-          ecs-service: ${{ env.ECS_SERVICE }}
-          docker-tag: ${{ steps.build-push.outputs.docker-tag }}
-      - uses: mbta/actions/notify-slack-deploy@v1
-        if: ${{ !cancelled() }}
-        with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
-          job-status: ${{ job.status }}
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
